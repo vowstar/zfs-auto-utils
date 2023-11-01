@@ -1,0 +1,61 @@
+zfs-auto-utils
+=============
+
+This package is ported from debian to facilitate use on other distributions. This package renames some properties to make them more consistent when used with zfs-auto-snapshot.
+
+Auto TRIM
+-------------
+
+Auto TRIM is implemented using a custom per-pool property: com.sun:auto-trim
+
+By default, these TRIM jobs are scheduled on the first Sunday of every month. The completion speed depends on the disks size, disk speed and workload pattern. Cheap QLC disks could take considerable more time than very expensive enterprise graded NVMe disks.
+
+When com.sun:auto-trim is not present in pool, or the property is present but value is empty/invalid, they are treated as auto.
+
+To set the property to true, use:
+
+    zfs set com.sun:auto-trim=true tank
+
+To set the property to false, use:
+
+    zfs set com.sun:auto-trim=false tank
+
+Please note this property is set on the root dataset of the pool, not the pool itself because it is not yet implemented.
+
+See /etc/cron.d/zfsutils-linux and /usr/libexec/zfs/trim for details
+
+autotrim property
+ZFS can perform TRIM after data deletion, which is in some way similar to discard mount option in other file systems. To use autotrim, set the pool property:
+
+    zpool set autotrim=on tank
+
+Automatic TRIM looks for space which has been recently freed, and is no longer allocated by the pool, to be periodically trimmed, however it does not immediately reclaim blocks after a free, which makes it very effective at a cost of more likely of encountering tiny ranges.
+
+Note the previous mentioned com.sun:auto-trim does not conflict with autotrim, and is already sufficient for light usages. For heavy workloads, com.sun:auto-trim (which is full trim) can be used to work to complement autotrim.
+
+Auto Scrub
+-------------
+
+Auto Scrub is implemented using a custom per-pool property: com.sun:auto-scrub
+
+By default this have a cron job entry to scrub all pools on the second Sunday of every month at 24 minutes past midnight.
+
+See /etc/cron.d/zfsutils-linux and /usr/libexec/zfs/scrub for details
+
+It is possible to disable this by setting a zfs user defined property on the root dataset for a pool.
+
+To set the property to false, use:
+
+    zfs set com.sun:auto-scrub=false tank
+
+To set the property to true, use:
+
+    zfs set com.sun:auto-scrub=true tank
+
+Installation
+-------------
+
+    wget https://github.com/vowstar/zfs-auto-utils/archive/1.0.0.tar.gz -O zfs-auto-utils-1.0.0.tar.gz
+    tar -xzf zfs-auto-utils-1.0.0.tar.gz
+    cd zfs-auto-utils-1.0.0
+    make install
